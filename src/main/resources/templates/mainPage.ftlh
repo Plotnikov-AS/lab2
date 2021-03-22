@@ -5,64 +5,83 @@
     <title>Main page</title>
 </head>
 <body>
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.10.2.js"></script>
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-<script type="text/javascript">
+<script>
     var selected = [];
-    google.charts.load('current', {'packages': ['corechart']});
-    google.charts.setOnLoadCallback(drawAreaChart);
+    var selected_count = 0;
+</script>
+<script type="text/javascript">
+    google.charts.load('current', {packages: ['corechart', 'line']});
+    google.charts.load('current', {packages: ['corechart', 'bar']});
+    google.charts.setOnLoadCallback(newValueClick);
+    google.charts.setOnLoadCallback(valueButtonClick);
 
-    function drawAreaChart() {
+    function newValueClick() {
+        drawLineChart();
+        document.getElementById('N1out').value = document.getElementById('N1').value
+    }
+
+    function valueButtonClick() {
+        $('#valueBtn').click(function () {
+            $(this).prop('disabled', true);
+            selected_count++;
+            console.log('sel count = ' + selected_count);
+            let sel = [String(selected_count), Number($(this).val())];
+            selected.push(sel);
+            console.log(selected);
+            drawColumnChart();
+        });
+    }
+
+    function drawLineChart() {
         <#if values?? && (values?size > 0)>
+
         var data = google.visualization.arrayToDataTable([
             ['Номер', 'Значения'],
             <#foreach value in values>
-            ['${value_index}', ${value.value}]<#if value_has_next>,</#if>
+            ['${value_index}', ${value.value}]<#if value_has_next>, </#if>
             </#foreach>
         ]);
 
         var options = {
-            hAxis: {title: 'Время', titleTextStyle: {color: '#333'}},
-            vAxis: {title: 'Значения', minValue: 0}
+            hAxis: {
+                title: 'Время'
+            },
+            vAxis: {
+                title: 'Значения'
+            },
+            backgroundColor: '#f1f8e9'
         };
 
-        var chart = new google.visualization.AreaChart(document.getElementById('area_chart_div'));
+        var chart = new google.visualization.LineChart(document.getElementById('area_chart_div'));
         chart.draw(data, options);
         </#if>
-    }
+
+    };
 
     function drawColumnChart() {
         var data = new google.visualization.DataTable();
-        data.addColumn('number', 'Выборочные значения');
-        selected.forEach(function (item, i, selected) {
-            data.addRows([
-                [i, item]
-            ]);
-        });
+        data.addColumn('number', 'X');
+        data.addColumn('number', 'Значения');
+
+        data.addRows(selected);
 
         var options = {
-            title: 'Выбранные значения',
             hAxis: {
-                title: 'Номер'
+                title: 'Выборочные значения',
+                format: '0'
             },
             vAxis: {
-                title: 'Значение'
-            }
+                title: 'Значения',
+                format: '0'
+            },
+            backgroundColor: '#f1f8e9'
         };
 
         var chart = new google.visualization.ColumnChart(document.getElementById('column_chart_div'));
-
         chart.draw(data, options);
-    }
-
-    function getN1() {
-        document.getElementById('N1out').value = document.getElementById('N1').value
-    }
-
-    function addToSelectedDisableAndDraw(sel) {
-        selected.push(sel.value);
-        sel.disabled = true;
-        drawColumnChart();
-    }
+    };
 </script>
 <div>
     <table>
@@ -72,15 +91,14 @@
         </tr>
     </table>
     <form action="add" method="post">
-        Новое значение: <input type="number" id="newValue" name="newValue"> <input type="submit" value="Добавить"
-                                                                                   onclick="getN1()">
+        Новое значение: <input type="number" id="newValue" name="newValue"> <input type="submit" value="Добавить" onclick="newValueClick()">
         <input type="hidden" id="N1out" name="N1" value="">
     </form>
 </div>
 <#if values?? && (values?size > 0)>
     <div>
         <table>
-            <tr><#foreach value in values><input type="button" value="${value.value}" onclick="addToSelectedDisableAndDraw(this)"> </#foreach></tr>
+            <tr><#foreach value in values><input type="button" id="valueBtn" value="${value.value}"> </#foreach></tr>
         </table>
     </div>
     <div id="area_chart_div" style="width: 100%; height: 500px;"></div>

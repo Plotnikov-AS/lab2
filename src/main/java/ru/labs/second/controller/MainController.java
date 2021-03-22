@@ -18,18 +18,12 @@ public class MainController {
 
     @GetMapping("/")
     public String mainPage() {
-
-        return "mainPage";
+        valueService.deleteAllValues();
+        return "sprizdil";
     }
 
     @PostMapping("/add")
-    public String add(@RequestParam(value = "newValue") Long newValue,
-                      @RequestParam(value = "N1") Integer n1,
-                      Model model) {
-        List<Value> values = valueService.addValue(newValue, n1);
-        model.addAttribute("values", values);
-        model.addAttribute("N1", n1);
-
-        return "mainPage";
+    public void add(@RequestParam(value = "newValue") Long newValue) {
+        valueService.addValue(newValue);
     }
 }

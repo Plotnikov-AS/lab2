@@ -12,17 +12,12 @@ import java.util.List;
 public class ValueService {
     private final ValuesDao valuesDao;
 
-    public List<Value> addValue(Long newValue, Integer n1) {
+    public List<Value> addValue(Long newValue) {
         List<Value> values = valuesDao.getAllValues();
         Value value = new Value();
         value.setValue(newValue);
         value = valuesDao.addValue(value);
         values.add(value);
-        while (values.size() > n1) {
-            Value valueToRemove = values.get(0);
-            valuesDao.removeValue(valueToRemove);
-            values.remove(valueToRemove);
-        }
         return values;
     }
 
