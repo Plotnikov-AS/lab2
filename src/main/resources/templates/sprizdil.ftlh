@@ -7,7 +7,7 @@
 </head>
 <body>
 <script language=JavaScript>
-    let zn_col = 0, zn_last = 0, vybor_cnt = 0;
+    let zn_col = 0, zn_last = 0, vybor_cnt = 0, sr_znach = 0;
     data_zn = Array();
     data_vybor = Array();
 </script>
@@ -39,13 +39,14 @@
     </div>
     <div class="table" id="vybor">
         <div class="client_row">
-            <div class="cell" id="vybor_cell"></div>
+            <div class="cell" id="vybor_cell">Выборочные значения: </div>
         </div>
     </div>
     <div class="table" id="diag">
         <div class="client_row">
             <div class="cell">
                 <div id="chart_div2"></div>
+                <div id="chart_div3"></div>
             </div>
         </div>
     </div>
@@ -54,34 +55,39 @@
             let new_val = $('#new_zn').val();
             if (new_val < 0) {
                 alert('Значение отрицательное!');
-            }
-            ;
-            zn_last++;
-            $('#tek_cell').append('<input type=button value=' + new_val + ' class="tek_zn" id="tek' + zn_last + '">');
-            $('#tek' + zn_last).click(function () {
-                $('#vybor_cell').append($(this).val() + ' ');
-                $(this).prop('disabled', true);
-                vybor_cnt++;
-                let zn_arr2 = [Number(vybor_cnt), Number($(this).val())];
-                data_vybor.push(zn_arr2);
-                drawColumnChart();
-            });
-            let zn_arr = [Number(zn_last), Number(new_val)];
-            data_zn.push(zn_arr);
-            zn_col = $('#n1').val();
-            if ($('.tek_zn').length > zn_col) {
-                $('#tek' + (zn_last - zn_col)).css('display', 'none');
-            }
-            ;
-            drawLineChart();
-            if (zn_last > 1) {
-                pred = $('#tek' + (zn_last - 1)).val();
-                proc = $('#n2').val();
-                if ((new_val - pred) / pred > (proc / 100)) {
-                    alert('Значение больше предыдущего на ' + Math.round((new_val - pred) / pred * 100) + '%');
+            } else {
+                zn_last++;
+                $('#tek_cell').append('<input type=button value=' + new_val + ' class="tek_zn" id="tek' + zn_last + '">');
+                $('#tek' + zn_last).click(function () {
+                    $('#vybor_cell').append($(this).val() + ' ');
+                    $(this).prop('disabled', true);
+                    vybor_cnt++;
+                    let zn_arr2 = [Number(vybor_cnt), Number($(this).val())];
+                    data_vybor.push(zn_arr2);
+                    let sumVybor = 0;
+                    data_vybor.forEach(function (innerArray, index, data_vybor) {
+                        let val = innerArray[1];
+                        sumVybor += val;
+                    });
+                    sr_znach = sumVybor / vybor_cnt;
+                    drawColumnChart();
+                    drawLineChartForVybor();
+                });
+                let zn_arr = [Number(zn_last), Number(new_val)];
+                data_zn.push(zn_arr);
+                zn_col = $('#n1').val();
+                if ($('.tek_zn').length > zn_col) {
+                    $('#tek' + (zn_last - zn_col)).css('display', 'none');
+                }
+                drawLineChart();
+                if (zn_last > 1) {
+                    pred = $('#tek' + (zn_last - 1)).val();
+                    proc = $('#n2').val();
+                    if ((new_val - pred) / pred > (proc / 100)) {
+                        alert('Значение больше предыдущего на ' + Math.round((new_val - pred) / pred * 100) + '%');
+                    }
                 }
             }
-            ;
         });
         google.charts.load('current', {packages: ['corechart', 'line']});
         google.charts.load('current', {packages: ['corechart', 'bar']});
@@ -105,6 +111,29 @@
             var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
             chart.draw(data, options);
         };
+
+        function drawLineChartForVybor() {
+            var data = new google.visualization.DataTable();
+            data.addColumn('number', 'X');
+            data.addColumn('number', 'Значения');
+            data.addColumn('number', 'Среднее значение');
+
+            data_vybor.forEach(function (cur, index, data_vybor) {
+                data.addRow([cur[0], cur[1], sr_znach]);
+            });
+
+            var options = {
+                hAxis: {
+                    title: 'Время'
+                },
+                vAxis: {
+                    title: 'Значения'
+                },
+            };
+
+            var chart = new google.visualization.LineChart(document.getElementById('chart_div3'));
+            chart.draw(data, options);
+        }
 
         function drawColumnChart() {
             var data = new google.visualization.DataTable();
